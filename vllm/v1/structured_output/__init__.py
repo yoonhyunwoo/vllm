@@ -296,10 +296,10 @@ class StructuredOutputManager:
                 req_tokens = scheduled_spec_decode_tokens.get(req_id, ())
                 for i, token in enumerate(req_tokens):
                     self._fill_bitmasks(((grammar, cumulative_index, apply_bitmask),))
-                    advance_grammar = apply_bitmask
+                    apply_to_grammar = apply_bitmask
                     if token == -1:
                         apply_bitmask = False
-                        advance_grammar = False
+                        apply_to_grammar = False
                     elif (
                         detect_reasoning_end
                         and reasoner is not None
@@ -319,9 +319,9 @@ class StructuredOutputManager:
                             # but tolerate rejection since those drafts predate
                             # the bitmask and are not guaranteed valid.
                             apply_bitmask = True
-                            advance_grammar = False
+                            apply_to_grammar = False
                             post_reasoning_end_in_window = True
-                    if advance_grammar and not grammar.is_terminated():
+                    if apply_to_grammar and not grammar.is_terminated():
                         accepted = grammar.accept_tokens(req_id, [token])
                         if accepted:
                             state_advancements += 1
@@ -412,17 +412,13 @@ class StructuredOutputManager:
             if reasoner.is_reasoning_end_streaming(all_token_ids, new_token_ids):
                 structured_req.reasoning_ended = True
                 structured_req.reasoning_end_token_index = (
-                    self._find_reasoning_end_index(
-                        reasoner, all_token_ids, start
-                    )
+                    self._find_reasoning_end_index(reasoner, all_token_ids, start)
                 )
             else:
                 return True  # Still reasoning, do not touch grammar.
 
         # Reasoning ended: cut reasoning tokens, then feed to grammar.
-        advance_token_ids = self._trim_reasoning_tokens(
-            request, new_token_ids
-        )
+        advance_token_ids = self._trim_reasoning_tokens(request, new_token_ids)
         if not advance_token_ids:
             return True
         return grammar.accept_tokens(request.request_id, advance_token_ids)

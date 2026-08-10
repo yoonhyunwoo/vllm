@@ -3231,14 +3231,13 @@ def test_abort_request_when_structured_output_fsm_cannot_advance():
     )
     request.structured_output_request = Mock()
     request.structured_output_request.grammar = Mock(spec=StructuredOutputGrammar)
-    request.structured_output_request.grammar.accept_tokens.return_value = False
     request.status = RequestStatus.RUNNING
     request.num_computed_tokens = request.num_tokens
 
     scheduler.perf_metrics = None
     scheduler.connector = None
     scheduler.structured_output_manager = Mock()
-    scheduler.structured_output_manager.advance_grammar.return_value = True
+    scheduler.structured_output_manager.advance_grammar.return_value = False
     scheduler.structured_output_manager.filter_draft_tokens.side_effect = (
         lambda request, spec_token_ids: spec_token_ids
     )
@@ -3289,9 +3288,6 @@ def test_abort_request_when_structured_output_fsm_cannot_advance():
     )
     engine_core_outputs = scheduler.update_from_output(output, model_runner_output)
 
-    request.structured_output_request.grammar.accept_tokens.assert_called_once_with(
-        request.request_id, [123]
-    )
     assert request.resumable is False
     assert request.status == RequestStatus.FINISHED_ERROR
     assert request.request_id not in scheduler.requests

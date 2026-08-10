@@ -1822,8 +1822,9 @@ class Scheduler(SchedulerInterface):
                 request, new_token_ids
             ):
                 logger.error(
-                    "Unexpected: grammar rejected tokens for request %s. "
+                    "Unexpected: grammar rejected tokens %s for request %s. "
                     "Terminating request.",
+                    new_token_ids,
                     req_id,
                 )
                 request.status = RequestStatus.FINISHED_ERROR
